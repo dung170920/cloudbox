@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 
 export const generateUploadUrl = mutation(async (ctx) => {
   const identity = await ctx.auth.getUserIdentity();
@@ -36,6 +37,22 @@ export async function hasAccessToOrg(ctx: QueryCtx | MutationCtx, orgId: string)
   return { user };
 }
 
+async function hasAccessToFile(ctx: QueryCtx | MutationCtx, fileId: Id<"files">) {
+  const file = await ctx.db.get(fileId);
+
+  if (!file) {
+    return null;
+  }
+
+  const hasAccess = await hasAccessToOrg(ctx, file.orgId);
+
+  if (!hasAccess) {
+    return null;
+  }
+
+  return { user: hasAccess.user, file };
+}
+
 export const createFile = mutation({
   args: {
     name: v.string(),
@@ -68,5 +85,20 @@ export const getFiles = query({
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
       .collect();
+  },
+});
+
+export const deleteFile = mutation({
+  args: {
+    fileId: v.id("files"),
+  },
+  handler: async (ctx, args) => {
+    const hasAccess = await hasAccessToFile(ctx, args.fileId);
+
+    if (!hasAccess) {
+      throw new ConvexError("You do not have access to delete this file");
+    }
+
+    await ctx.db.delete(args.fileId);
   },
 });
