@@ -5,6 +5,8 @@ import { api } from "../../../convex/_generated/api";
 
 import UploadButton from "@/components/UploadButton"
 import FileCard from "@/components/FileCard";
+import Image from "next/image";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const organization = useOrganization();
@@ -19,15 +21,33 @@ export default function Home() {
 
   return (
     <section className="p-8 container">
-      <div className="flex justify-between">
-        <h1 className="text-2xl font-semibold">All Files</h1>
+      <div className="flex justify-between mb-6">
+        <h1 className="text-xl font-semibold">All Files</h1>
         <UploadButton />
       </div>
-      <div className="grid md:grid-cols-4 grid-cols-2 mt-6">
-        {files?.map((file) => (
-          <FileCard key={file._id} file={file} />
-        ))}
-      </div>
+      {!files ? (
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <Loader2 className="animate-spin h-32 w-32" />
+          <p className="text-2xl mt-1 text-neutral-700">Loading...</p>
+        </div>
+      ) : (
+        <>
+          {files.length > 0 ?
+            (<div className="grid md:grid-cols-4 grid-cols-2">
+              {files.map((file) => (
+                <FileCard key={file._id} file={file} />
+              ))}
+            </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center w-full h-full gap-4">
+                <Image src={"/icons/empty-folder.svg"} width={300} height={300} alt="empty" />
+                <h2 className="text-center text-2xl font-semibold">No Documents Available</h2>
+                <p className="text-center text-lg text-neutral-700">Please upload a document to get started</p>
+              </div>
+            )}
+        </>
+      )}
+
 
     </section>
   );

@@ -74,7 +74,7 @@ const UploadButton = () => {
         name: values.file[0].name,
         fileId: storageId,
         orgId,
-        // type: types[fileType],
+        type: fileType
       });
       form.reset();
       toast({

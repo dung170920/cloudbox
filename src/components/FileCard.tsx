@@ -28,6 +28,8 @@ import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { useToast } from '@/components/ui/use-toast'
+import { fileIcon } from '@/constants'
+import Image from 'next/image'
 
 type Props = {
   file: Doc<"files">
@@ -38,14 +40,26 @@ const FileCard = ({ file }: Props) => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { toast } = useToast();
 
+  const fileExtension = file.type.split("/")[1];
+  const fileType = fileIcon[fileExtension];
+
+  function getFileUrl() {
+    console.log(`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${file.fileId}`);
+
+    return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${file.fileId}`
+  }
+
   return (
     <>
-      <Card>
+      <Card className='w-full'>
         <CardContent className='p-0'>
-          <p>Card Content</p>
+          <Image src={getFileUrl()} width={100} height={100} alt={file.name} className='w-full aspect-video' />
         </CardContent>
-        <CardFooter className='flex justify-between gap-2 items-center px-5 py-4'>
-          <p className='text-sm truncate font-medium'>{file.name}</p>
+        <CardFooter className='justify-between gap-2 px-5 py-4'>
+          <div className="flex gap-1 items-center truncate flex-1">
+            <fileType.icon className={`h-6 w-6 flex-shrink-0`} style={{ color: fileType.color }} />
+            <span className='text-sm truncate font-medium'>{file.name}</span>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">

@@ -58,6 +58,7 @@ export const createFile = mutation({
     name: v.string(),
     orgId: v.string(),
     fileId: v.id("_storage"),
+    type: v.string(),
   },
   handler: async (ctx, args) => {
     const hasAccess = await hasAccessToOrg(ctx, args.orgId);
@@ -66,7 +67,7 @@ export const createFile = mutation({
       throw new ConvexError("you do not have access to this org");
     }
 
-    await ctx.db.insert("files", { name: args.name, orgId: args.orgId, fileId: args.fileId });
+    await ctx.db.insert("files", { name: args.name, orgId: args.orgId, fileId: args.fileId, type: args.type });
   },
 });
 
