@@ -1,26 +1,27 @@
 "use client";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-
-import UploadButton from "@/components/UploadButton"
-import FileCard from "@/components/FileCard";
+import { api } from "../../../../convex/_generated/api";
+import UploadButton from "./_components/UploadButton"
+import FileCard from "./_components/FileCard";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
   const organization = useOrganization();
   const user = useUser();
+  const [query, setQuery] = useState('query');
 
   let orgId: string | undefined;
   if (organization.isLoaded && user.isLoaded) {
     orgId = organization.organization?.id ?? user.user?.id;
   };
 
-  const files = useQuery(api.files.getFiles, orgId ? { orgId } : 'skip');
+  const files = useQuery(api.files.getFiles, orgId ? { orgId, query } : 'skip');
 
   return (
-    <section className="p-8 container">
+    <section className="p-8 container min-h-full">
       <div className="flex justify-between mb-6">
         <h1 className="text-xl font-semibold">All Files</h1>
         <UploadButton />

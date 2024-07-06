@@ -1,4 +1,22 @@
-import { FileArchive, FileAudio, FileBarChart2, FileCode, FileImage, FileSpreadsheet, FileText, FileVideo } from "lucide-react";
+import { FileArchive, FileAudio, FileBarChart2, FileCode, FileImage, FileSpreadsheet, FileText, FileVideo, LayoutDashboard, Star, Trash2 } from "lucide-react";
+
+export const sideLinks = [
+  {
+    name: 'All Files',
+    path: '/',
+    icon: LayoutDashboard
+  },
+  {
+    name: 'Starred',
+    path: '/starred',
+    icon: Star
+  },
+  {
+    name: 'Trash',
+    path: '/trash',
+    icon: Trash2
+  },
+];
 
 export const fileIcon: Record<string, { icon: any, color: string }> = {
   'pdf': {

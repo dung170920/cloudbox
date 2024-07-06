@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react'
-import { Doc } from '../../convex/_generated/dataModel'
+import { Doc } from '../../../../../convex/_generated/dataModel'
 import {
   Card,
   CardContent,
@@ -23,9 +23,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from '@/components/ui/button'
-import { CircleEllipsis, Trash2 } from 'lucide-react'
+import { CircleEllipsis, Download, Trash2 } from 'lucide-react'
 import { useMutation } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { api } from '../../../../../convex/_generated/api'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { useToast } from '@/components/ui/use-toast'
 import { fileIcon } from '@/constants'
@@ -66,11 +66,17 @@ const FileCard = ({ file }: Props) => {
                 <CircleEllipsis className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className='cursor-pointer'>
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => {
+                // if (!file.url) return;
+                // window.open(file.url, "_blank");
+              }}>
+                <Download className='h-4 w-4 mr-2' />
+                <span className='text-sm'>Download</span>
+              </DropdownMenuItem>
               <DropdownMenuItem>Billing</DropdownMenuItem>
               <DropdownMenuItem>Team</DropdownMenuItem>
-              <DropdownMenuItem className='text-destructive cursor-pointer' onClick={() => setIsConfirmOpen(true)}>
+              <DropdownMenuItem className='text-destructive' onClick={() => setIsConfirmOpen(true)}>
                 <Trash2 className='h-4 w-4 mr-2' />
                 <span className='text-sm'>Remove</span>
               </DropdownMenuItem>

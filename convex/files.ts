@@ -74,6 +74,7 @@ export const createFile = mutation({
 export const getFiles = query({
   args: {
     orgId: v.string(),
+    query: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const hasAccess = await hasAccessToOrg(ctx, args.orgId);
@@ -82,10 +83,16 @@ export const getFiles = query({
       return [];
     }
 
-    return await ctx.db
+    const files = await ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
       .collect();
+
+    if (!args.query) {
+      return files;
+    }
+
+    return files.filter((file) => file.name.toLowerCase().includes(args.query!.toLowerCase()));
   },
 });
 
