@@ -25,18 +25,19 @@ import {
 import { Button } from '@/components/ui/button'
 import { CircleEllipsis, Download, Star, Trash2 } from 'lucide-react'
 import { useMutation } from 'convex/react'
-import { CheckCircledIcon } from '@radix-ui/react-icons'
+import { CheckCircledIcon, StarFilledIcon } from '@radix-ui/react-icons'
 import { useToast } from '@/components/ui/use-toast'
 import { fileIcon } from '@/constants'
 import Image from 'next/image'
 import { api } from '../../../../convex/_generated/api'
-import { Doc } from '../../../../convex/_generated/dataModel'
+import { Doc, Id } from '../../../../convex/_generated/dataModel'
 
 type Props = {
-  file: Doc<"files">
+  file: Doc<"files">,
+  favorites: Doc<"favorites">[],
 }
 
-const FileCard = ({ file }: Props) => {
+const FileCard = ({ file, favorites }: Props) => {
   const deleteFile = useMutation(api.files.deleteFile);
   const toggleFavorite = useMutation(api.files.toggleFavorite);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -49,6 +50,10 @@ const FileCard = ({ file }: Props) => {
     console.log(`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${file.fileId}`);
 
     return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${file.fileId}`
+  }
+
+  function isFavorited(fileId: Id<"files">) {
+    return favorites.some((favorite) => favorite.fileId === fileId);
   }
 
   return (
@@ -79,8 +84,18 @@ const FileCard = ({ file }: Props) => {
                   fileId: file._id,
                 });
               }}>
-                <Star className='h-4 w-4 mr-2' />
-                <span className='text-sm'>Starred</span>
+                {isFavorited(file._id) ? (
+                  <>
+                    <StarFilledIcon className='h-4 w-4 mr-2 text-yellow-500' />
+                    <span className='text-sm'>Unstarred</span>
+                  </>
+                ) :
+                  (<>
+                    <Star className='h-4 w-4 mr-2' />
+                    <span className='text-sm'>Starred</span>
+                  </>
+                  )}
+
               </DropdownMenuItem>
               <DropdownMenuItem>Team</DropdownMenuItem>
               <DropdownMenuSeparator />

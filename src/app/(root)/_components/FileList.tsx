@@ -8,7 +8,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useSearchParams } from 'next/navigation';
 
-const FileList = ({ type }: { type?: 'starred' }) => {
+const FileList = ({ type }: { type?: 'starred' | 'trash' }) => {
   const searchParams = useSearchParams();
   const organization = useOrganization();
   const user = useUser();
@@ -18,7 +18,8 @@ const FileList = ({ type }: { type?: 'starred' }) => {
     orgId = organization.organization?.id ?? user.user?.id;
   };
 
-  const files = useQuery(api.files.getFiles, orgId ? { orgId, query: searchParams.get('query') || '', type: type === 'starred' ? 'favorite' : undefined } : 'skip');
+  const files = useQuery(api.files.getFiles, orgId ? { orgId, query: searchParams.get('query') || '', type } : 'skip');
+  const favorites = useQuery(api.files.getAllFavorites, orgId ? { orgId } : 'skip') || [];
 
   return (
     <>
@@ -32,7 +33,7 @@ const FileList = ({ type }: { type?: 'starred' }) => {
           {files.length > 0 ?
             (<div className="grid md:grid-cols-4 grid-cols-2">
               {files.map((file) => (
-                <FileCard key={file._id} file={file} />
+                <FileCard key={file._id} file={file} favorites={favorites} />
               ))}
             </div>
             ) : (

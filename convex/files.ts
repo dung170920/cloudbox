@@ -75,7 +75,7 @@ export const getFiles = query({
   args: {
     orgId: v.string(),
     query: v.optional(v.string()),
-    type: v.optional(v.union(v.literal("favorite"), v.literal("trash"))),
+    type: v.optional(v.union(v.literal("starred"), v.literal("trash"))),
   },
   handler: async (ctx, args) => {
     const hasAccess = await hasAccessToOrg(ctx, args.orgId);
@@ -93,7 +93,7 @@ export const getFiles = query({
       files = files.filter((file) => file.name.toLowerCase().includes(args.query!.toLowerCase()));
     }
 
-    if (args.type === "favorite") {
+    if (args.type === "starred") {
       const favorites = await ctx.db
         .query("favorites")
         .withIndex("by_userId_orgId_fileId", (q) => q.eq("userId", hasAccess.user?._id).eq("orgId", args.orgId))
@@ -123,7 +123,6 @@ export const deleteFile = mutation({
 export const toggleFavorite = mutation({
   args: { fileId: v.id("files") },
   async handler(ctx, args) {
-    console.log("args :", args);
     const access = await hasAccessToFile(ctx, args.fileId);
 
     if (!access) {
@@ -146,5 +145,23 @@ export const toggleFavorite = mutation({
     } else {
       await ctx.db.delete(favorite._id);
     }
+  },
+});
+
+export const getAllFavorites = query({
+  args: { orgId: v.string() },
+  async handler(ctx, args) {
+    const hasAccess = await hasAccessToOrg(ctx, args.orgId);
+
+    if (!hasAccess) {
+      return [];
+    }
+
+    const favorites = await ctx.db
+      .query("favorites")
+      .withIndex("by_userId_orgId_fileId", (q) => q.eq("userId", hasAccess.user._id).eq("orgId", args.orgId))
+      .collect();
+
+    return favorites;
   },
 });
