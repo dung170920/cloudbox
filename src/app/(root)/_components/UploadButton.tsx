@@ -25,8 +25,8 @@ import { useForm } from "react-hook-form"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useMutation } from "convex/react"
-import { api } from '../../convex/_generated/api';
 import { useOrganization, useUser } from '@clerk/nextjs';
+import { api } from '../../../../convex/_generated/api';
 
 const MAX_FILE_SIZE = 5000000;
 

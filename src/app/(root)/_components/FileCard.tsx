@@ -1,6 +1,5 @@
 "use client"
 import React, { useState } from 'react'
-import { Doc } from '../../../../../convex/_generated/dataModel'
 import {
   Card,
   CardContent,
@@ -10,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -23,13 +23,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from '@/components/ui/button'
-import { CircleEllipsis, Download, Trash2 } from 'lucide-react'
+import { CircleEllipsis, Download, Star, Trash2 } from 'lucide-react'
 import { useMutation } from 'convex/react'
-import { api } from '../../../../../convex/_generated/api'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { useToast } from '@/components/ui/use-toast'
 import { fileIcon } from '@/constants'
 import Image from 'next/image'
+import { api } from '../../../../convex/_generated/api'
+import { Doc } from '../../../../convex/_generated/dataModel'
 
 type Props = {
   file: Doc<"files">
@@ -37,6 +38,7 @@ type Props = {
 
 const FileCard = ({ file }: Props) => {
   const deleteFile = useMutation(api.files.deleteFile);
+  const toggleFavorite = useMutation(api.files.toggleFavorite);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { toast } = useToast();
 
@@ -66,16 +68,22 @@ const FileCard = ({ file }: Props) => {
                 <CircleEllipsis className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent className='min-w-[180px]'>
               <DropdownMenuItem onClick={() => {
-                // if (!file.url) return;
-                // window.open(file.url, "_blank");
               }}>
                 <Download className='h-4 w-4 mr-2' />
                 <span className='text-sm'>Download</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>Billing</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                toggleFavorite({
+                  fileId: file._id,
+                });
+              }}>
+                <Star className='h-4 w-4 mr-2' />
+                <span className='text-sm'>Starred</span>
+              </DropdownMenuItem>
               <DropdownMenuItem>Team</DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem className='text-destructive' onClick={() => setIsConfirmOpen(true)}>
                 <Trash2 className='h-4 w-4 mr-2' />
                 <span className='text-sm'>Remove</span>

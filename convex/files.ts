@@ -75,6 +75,7 @@ export const getFiles = query({
   args: {
     orgId: v.string(),
     query: v.optional(v.string()),
+    type: v.optional(v.union(v.literal("favorite"), v.literal("trash"))),
   },
   handler: async (ctx, args) => {
     const hasAccess = await hasAccessToOrg(ctx, args.orgId);
@@ -83,16 +84,24 @@ export const getFiles = query({
       return [];
     }
 
-    const files = await ctx.db
+    let files = await ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
       .collect();
 
-    if (!args.query) {
-      return files;
+    if (args.query) {
+      files = files.filter((file) => file.name.toLowerCase().includes(args.query!.toLowerCase()));
     }
 
-    return files.filter((file) => file.name.toLowerCase().includes(args.query!.toLowerCase()));
+    if (args.type === "favorite") {
+      const favorites = await ctx.db
+        .query("favorites")
+        .withIndex("by_userId_orgId_fileId", (q) => q.eq("userId", hasAccess.user?._id).eq("orgId", args.orgId))
+        .collect();
+      files = files.filter((file) => favorites.some((favorite) => favorite.fileId === file._id));
+    }
+
+    return files;
   },
 });
 
@@ -108,5 +117,34 @@ export const deleteFile = mutation({
     }
 
     await ctx.db.delete(args.fileId);
+  },
+});
+
+export const toggleFavorite = mutation({
+  args: { fileId: v.id("files") },
+  async handler(ctx, args) {
+    console.log("args :", args);
+    const access = await hasAccessToFile(ctx, args.fileId);
+
+    if (!access) {
+      throw new ConvexError("no access to file");
+    }
+
+    const favorite = await ctx.db
+      .query("favorites")
+      .withIndex("by_userId_orgId_fileId", (q) =>
+        q.eq("userId", access.user._id).eq("orgId", access.file.orgId).eq("fileId", access.file._id)
+      )
+      .first();
+
+    if (!favorite) {
+      await ctx.db.insert("favorites", {
+        fileId: access.file._id,
+        userId: access.user._id,
+        orgId: access.file.orgId,
+      });
+    } else {
+      await ctx.db.delete(favorite._id);
+    }
   },
 });
