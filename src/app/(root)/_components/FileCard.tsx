@@ -23,14 +23,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from '@/components/ui/button'
-import { CircleEllipsis, Download, Star, Trash2 } from 'lucide-react'
-import { useMutation } from 'convex/react'
-import { CheckCircledIcon, StarFilledIcon } from '@radix-ui/react-icons'
+import { CircleEllipsis, Download, Star, Trash2, Undo } from 'lucide-react'
+import { useMutation, useQuery } from 'convex/react'
+import { CheckCircledIcon, CrossCircledIcon, StarFilledIcon } from '@radix-ui/react-icons'
 import { useToast } from '@/components/ui/use-toast'
 import { fileIcon } from '@/constants'
 import Image from 'next/image'
 import { api } from '../../../../convex/_generated/api'
 import { Doc, Id } from '../../../../convex/_generated/dataModel'
+import { Protect } from '@clerk/nextjs'
+import { cn } from '@/lib/utils'
 
 type Props = {
   file: Doc<"files">,
@@ -39,6 +41,7 @@ type Props = {
 
 const FileCard = ({ file, favorites }: Props) => {
   const deleteFile = useMutation(api.files.deleteFile);
+  const restoreFile = useMutation(api.files.restoreFile);
   const toggleFavorite = useMutation(api.files.toggleFavorite);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { toast } = useToast();
@@ -75,6 +78,7 @@ const FileCard = ({ file, favorites }: Props) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent className='min-w-[180px]'>
               <DropdownMenuItem onClick={() => {
+                // window.open(getFileUrl(file.fileId, "_blank"))
               }}>
                 <Download className='h-4 w-4 mr-2' />
                 <span className='text-sm'>Download</span>
@@ -95,14 +99,26 @@ const FileCard = ({ file, favorites }: Props) => {
                     <span className='text-sm'>Starred</span>
                   </>
                   )}
-
               </DropdownMenuItem>
-              <DropdownMenuItem>Team</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className='text-destructive' onClick={() => setIsConfirmOpen(true)}>
-                <Trash2 className='h-4 w-4 mr-2' />
-                <span className='text-sm'>Remove</span>
-              </DropdownMenuItem>
+              <Protect role={"org:admin"} fallback={<></>}>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className={cn("", { 'text-destructive': !file.shouldDelete, "text-success": file.shouldDelete })}
+                  onClick={() => {
+                    if (file.shouldDelete) {
+                      restoreFile({ fileId: file._id });
+                    } else {
+                      setIsConfirmOpen(true);
+                    }
+                  }}>
+                  {file.shouldDelete ? (<>
+                    <Undo className='h-4 w-4 mr-2' />
+                    <span className='text-sm'>Restore</span>
+                  </>) : (<>
+                    <Trash2 className='h-4 w-4 mr-2' />
+                    <span className='text-sm'>Remove</span>
+                  </>)}
+                </DropdownMenuItem>
+              </Protect>
             </DropdownMenuContent>
           </DropdownMenu>
         </CardFooter>
@@ -112,19 +128,28 @@ const FileCard = ({ file, favorites }: Props) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone.
+              This action cannot be undone. This will permanently delete your file and remove your data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={async () => {
-                await deleteFile({ fileId: file._id });
-                toast({
-                  variant: "success",
-                  description: <div className="flex gap-2"><CheckCircledIcon height={20} width={20} />Deleted successfully</div>,
-                });
-              }}>Continue</AlertDialogAction>
+              onClick={() => {
+                try {
+                  deleteFile({ fileId: file._id });
+                  toast({
+                    variant: "success",
+                    description: <div className="flex gap-2"><CheckCircledIcon height={20} width={20} />Deleted successfully</div>,
+                  });
+                } catch (error) {
+                  toast({
+                    variant: "destructive",
+                    description: <div className="flex gap-2"><CrossCircledIcon height={20} width={20} />Delete failed</div>,
+                  });
+                }
+              }}>
+              Continue
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
