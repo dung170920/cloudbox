@@ -33,6 +33,7 @@ const columns: ColumnDef<Doc<"files"> & { url: string; isFavorited: boolean }>[]
     accessorKey: "owner",
     header: "Owner",
     cell: ({ row }) => {
+      if (!row.original.userId) return;
       return <OwnerCell userId={row.original.userId} />;
     },
   },

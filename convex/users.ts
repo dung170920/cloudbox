@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { MutationCtx, QueryCtx, internalMutation, query } from "./_generated/server";
 import { roles } from "./schema";
+import { hasAccessToOrg } from "./files";
 
 export async function getUser(ctx: QueryCtx | MutationCtx, tokenIdentifier: string) {
   const user = await ctx.db
@@ -16,12 +17,8 @@ export async function getUser(ctx: QueryCtx | MutationCtx, tokenIdentifier: stri
 }
 
 export const createUser = internalMutation({
-  args: {
-    tokenIdentifier: v.string(),
-    name: v.string(),
-    image: v.string(),
-  },
-  handler: async (ctx, args) => {
+  args: { tokenIdentifier: v.string(), name: v.string(), image: v.string() },
+  async handler(ctx, args) {
     await ctx.db.insert("users", {
       tokenIdentifier: args.tokenIdentifier,
       orgIds: [],
@@ -51,12 +48,8 @@ export const updateUser = internalMutation({
 });
 
 export const addOrgIdToUser = internalMutation({
-  args: {
-    tokenIdentifier: v.string(),
-    orgId: v.string(),
-    role: roles,
-  },
-  handler: async (ctx, args) => {
+  args: { tokenIdentifier: v.string(), orgId: v.string(), role: roles },
+  async handler(ctx, args) {
     const user = await getUser(ctx, args.tokenIdentifier);
 
     await ctx.db.patch(user._id, {
@@ -73,7 +66,7 @@ export const updateRoleInOrgForUser = internalMutation({
     const org = user.orgIds.find((org) => org.orgId === args.orgId);
 
     if (!org) {
-      throw new ConvexError("An org on the user but was not found when updating");
+      throw new ConvexError("expected an org on the user but was not found when updating");
     }
 
     org.role = args.role;
@@ -93,5 +86,24 @@ export const getUserProfile = query({
       name: user?.name,
       image: user?.image,
     };
+  },
+});
+
+export const getMe = query({
+  args: {},
+  async handler(ctx) {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      return null;
+    }
+
+    const user = await getUser(ctx, identity.tokenIdentifier);
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
   },
 });

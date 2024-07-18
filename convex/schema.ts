@@ -8,9 +8,9 @@ export default defineSchema({
     name: v.string(),
     orgId: v.string(),
     fileId: v.id("_storage"),
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")),
     type: v.string(),
-    shouldDelete: v.boolean(),
+    shouldDelete: v.optional(v.boolean()),
   })
     .index("by_orgId", ["orgId"])
     .index("by_shouldDelete", ["shouldDelete"]),
