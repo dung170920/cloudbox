@@ -16,17 +16,11 @@ const FileCard = ({ file }: Props) => {
   const fileExtension = file.type.split("/")[1];
   const fileType = fileIcon[fileExtension];
 
-  function getFileUrl() {
-    console.log(`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${file.fileId}`);
-
-    return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${file.fileId}`
-  }
-
   return (
     <>
       <Card className='w-full'>
         <CardContent className='p-0'>
-          <Image src={getFileUrl()} width={100} height={100} alt={file.name} className='w-full aspect-video' />
+          <Image src={file.url} width={100} height={100} alt={file.name} className='w-full aspect-video' />
         </CardContent>
         <CardFooter className='justify-between gap-2 px-5 py-4'>
           <div className="flex gap-1 items-center truncate flex-1">

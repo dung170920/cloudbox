@@ -83,6 +83,7 @@ export const getFiles = query({
     orgId: v.string(),
     query: v.optional(v.string()),
     type: v.optional(v.union(v.literal("starred"), v.literal("trash"))),
+    fileType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const hasAccess = await hasAccessToOrg(ctx, args.orgId);
@@ -114,7 +115,18 @@ export const getFiles = query({
       files = files.filter((file) => favorites.some((favorite) => favorite.fileId === file._id));
     }
 
-    return files;
+    if (args.fileType) {
+      files = files.filter((file) => file.type === args.type);
+    }
+
+    const filesWithUrl = await Promise.all(
+      files.map(async (file) => ({
+        ...file,
+        url: await ctx.storage.getUrl(file.fileId),
+      }))
+    );
+
+    return filesWithUrl;
   },
 });
 
